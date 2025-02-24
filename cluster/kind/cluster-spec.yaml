@@ -1,0 +1,35 @@
+# Picking a Kubernetes Version: https://kind.sigs.k8s.io/docs/user/configuration/#kubernetes-version
+# Releases: https://github.com/kubernetes-sigs/kind/releases/
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+containerdConfigPatches:
+- |-
+  [plugins."io.containerd.grpc.v1.cri".registry]
+    config_path = "/etc/containerd/certs.d"
+name: ##CLUSTER_NAME##
+nodes:
+- role: control-plane
+  image: kindest/node:v1.32.2@sha256:f226345927d7e348497136874b6d207e0b32cc52154ad8323129352923a3142f
+  kubeadmConfigPatches:
+  - |
+    kind: InitConfiguration
+    nodeRegistration:
+      kubeletExtraArgs:
+        node-labels: "ingress-ready=true"
+  extraPortMappings:
+  - containerPort: 30003
+    hostPort: 80
+    listenAddress: "0.0.0.0"
+    protocol: TCP
+  - containerPort: 30004
+    hostPort: 443
+    listenAddress: "0.0.0.0"
+    protocol: TCP
+  extraMounts:
+  - hostPath: ##VOLUME_MOUNT##
+    containerPath: /var/local-path-provisioner
+- role: worker
+  image: kindest/node:v1.32.2@sha256:f226345927d7e348497136874b6d207e0b32cc52154ad8323129352923a3142f
+  extraMounts:
+  - hostPath: ##VOLUME_MOUNT##
+    containerPath: /var/local-path-provisioner
